@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>LocalTranslate</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <span>✦</span> LocalTranslate
+        </div>
+
+        <div class="status">
+            <span class="status-dot"></span>
+            {{ "Local AI" if is_local else "Hosted AI" }}
+        </div>
+    </header>
+
+
+    <main class="container">
+
+        <section class="hero">
+            {% if is_local %}
+            <p class="badge">POWERED BY OLLAMA + GEMMA</p>
+            {% else %}
+            <p class="badge">POWERED BY {{ provider_label|upper }}</p>
+            {% endif %}
+
+            <h1>
+                Translate with
+                <span>{{ "Local AI." if is_local else "AI." }}</span>
+            </h1>
+
+            <p class="subtitle">
+                {% if is_local %}
+                A simple translator powered by a language model
+                running locally on your computer.
+                {% else %}
+                A simple AI translator. Free-tier demo: it may be
+                busy or slow to wake up at times.
+                {% endif %}
+            </p>
+        </section>
+
+
+        <form method="POST" id="translateForm" data-timeout="{{ client_timeout_ms }}">
+
+            <section class="translator">
+
+                <!-- INPUT -->
+                <div class="language-box">
+
+                    <div class="box-header">
+                        <label for="text">Input</label>
+
+                        <span class="language-label">
+                            English
+                        </span>
+                    </div>
+
+                    <textarea
+                        id="text"
+                        name="text"
+                        maxlength="{{ max_len }}"
+                        placeholder="Enter text to translate..."
+                        required
+                    >{{ text }}</textarea>
+
+                    <div class="box-footer">
+                        <span id="charCount">{{ text|length }} / {{ max_len }}</span>
+
+                        <button
+                            type="button"
+                            class="clear-btn"
+                            id="clearButton"
+                        >
+                            Clear
+                        </button>
+                    </div>
+
+                </div>
+
+
+                <!-- ARROW -->
+                <div class="arrow" aria-hidden="true">
+                    →
+                </div>
+
+
+                <!-- OUTPUT -->
+                <div class="language-box output-box">
+
+                    <div class="box-header">
+
+                        <label for="language">Translation</label>
+
+                        <select name="language" id="language">
+                            {% for lang in languages %}
+                            <option value="{{ lang }}" {{ "selected" if lang == selected }}>{{ lang }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+
+                    <div class="translation-area" id="translationArea" aria-live="polite">
+
+                        {% if translation %}
+
+                            <p id="translation">{{ translation }}</p>
+
+                        {% else %}
+
+                            <p class="placeholder" id="placeholder">
+                                Your translation will appear here...
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="box-footer" id="outputFooter" {{ "hidden" if not translation }}>
+
+                        <span id="providerLabel">{{ result_provider }}</span>
+
+                        <button
+                            type="button"
+                            class="copy-btn"
+                            id="copyButton"
+                        >
+                            Copy
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <button
+                type="submit"
+                class="translate-btn"
+                id="translateButton"
+            >
+                <span class="spinner" aria-hidden="true" hidden></span>
+                <span id="buttonLabel">✦ Translate</span>
+            </button>
+
+            <p class="hint">Tip: press Ctrl + Enter to translate.</p>
+
+        </form>
+
+        <!-- Status / error messages (read aloud by screen readers) -->
+        <div id="message" class="message" role="status" aria-live="polite" {{ "hidden" if not error }}>
+            {% if error %}{{ error }}{% endif %}
+        </div>
+
+
+        <section class="info">
+
+            {% if is_local %}
+            <div>
+                <strong>🔒 Private</strong>
+                <span>Your text stays on your machine.</span>
+            </div>
+
+            <div>
+                <strong>⚡ Local AI</strong>
+                <span>Powered by Ollama.</span>
+            </div>
+
+            <div>
+                <strong>🧠 Gemma 4 E2B</strong>
+                <span>Local language model.</span>
+            </div>
+            {% else %}
+            <div>
+                <strong>☁️ Hosted</strong>
+                <span>Your text is sent to a hosted AI service to be translated. Don't enter private information.</span>
+            </div>
+
+            <div>
+                <strong>⚡ {{ provider_label }}</strong>
+                <span>Free-tier AI; limits may apply.</span>
+            </div>
+
+            <div>
+                <strong>🌐 5 languages</strong>
+                <span>Tamil, English, Hindi, Malayalam, Telugu.</span>
+            </div>
+            {% endif %}
+
+        </section>
+
+    </main>
+
+
+    <footer>
+        <p>
+            {% if is_local %}
+            Built with Python · Flask · Ollama · Gemma 4 E2B
+            {% else %}
+            Built with Python · Flask · {{ provider_label }}
+            {% endif %}
+        </p>
+    </footer>
+
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
